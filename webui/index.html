@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PULSE // INSTALL</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){try{if(localStorage.getItem('pulse-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+</head>
+<body>
+
+<div id="bridge-warning" class="bridge-warning hidden">
+  Shell bridge unavailable. Set this module's access mode to Full, or Custom with
+  "WebUI shell bridge" enabled, in Shevery → ADB Modules.
+  <div><button class="btn btn-ghost" id="bridge-retry-btn" style="margin-top:8px;">Retry connection</button></div>
+</div>
+
+<header class="instrument-header">
+  <div class="instrument-top-row">
+    <div>
+      <div class="product-name">PULSE<span class="slash">//</span>INSTALL</div>
+      <div class="product-sub">Universal APK / APKS / XAPK / APKM installer</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div id="bridge-badge" class="bridge-badge">checking…</div>
+      <button class="theme-toggle-btn" id="theme-toggle-btn" type="button">☾ dark</button>
+    </div>
+  </div>
+  <div class="stat-strip">
+    <div class="stat-item"><span class="stat-num" id="stat-selected">0</span><span class="stat-lbl">selected</span></div>
+    <div class="stat-item"><span class="stat-num" id="stat-size">—</span><span class="stat-lbl">total size</span></div>
+    <div class="stat-item"><span class="stat-num" id="stat-unzip">…</span><span class="stat-lbl">unzip tool</span></div>
+  </div>
+</header>
+
+<nav class="tab-strip">
+  <button class="tab-btn active" data-tab="install">Install</button>
+  <button class="tab-btn" data-tab="extract">Extract</button>
+  <button class="tab-btn" data-tab="history">History</button>
+</nav>
+
+<main class="content">
+
+  <!-- INSTALL -->
+  <section id="tab-install" class="panel-view active">
+    <div class="card">
+      <div class="card-title">Auto-install folder</div>
+      <div class="card-desc">
+        Drop files into <code>/sdcard/pulse-install/auto/</code> and they're installed
+        automatically the next time Shevery starts this module's session (e.g. on boot) —
+        or right now with the button below. Installed files move to that folder's
+        <code>installed/</code> subfolder so nothing gets installed twice.
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="auto-scan-btn">Scan auto-install folder now</button>
+        <button class="btn btn-ghost" id="auto-log-btn">View log</button>
+      </div>
+      <div id="auto-progress" class="progress-box hidden"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Browse device storage</div>
+      <div class="row-between" style="margin-bottom:9px;">
+        <input type="text" id="path-input" value="/sdcard/Download">
+        <button class="btn btn-secondary" id="path-go-btn">Go</button>
+      </div>
+      <div id="file-list" class="item-list">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">VirusTotal scan</div>
+      <div class="card-desc">
+        Checks a file's SHA-256 hash against VirusTotal's database — fast, uses almost no
+        quota, and works for any file size, but only finds a result if <em>someone else</em>
+        has already scanned this exact file before. It never uploads the file itself (see
+        the README for why). Your key is stored only in this browser unless you clear it.
+      </div>
+      <label class="field">
+        VirusTotal API key
+        <div class="key-row">
+          <input type="password" id="vt-apikey-input" placeholder="paste your key…">
+          <button class="key-toggle" id="vt-key-toggle-btn" type="button">show</button>
+        </div>
+      </label>
+      <label class="check-inline" style="margin-bottom:7px;"><input type="checkbox" id="vt-remember-key"> Remember key on this device</label>
+      <label class="check-inline" style="margin-bottom:7px;"><input type="checkbox" id="vt-scan-before"> Scan selected files before install</label>
+      <label class="check-inline"><input type="checkbox" id="vt-scan-after"> Scan selected files after install</label>
+      <div id="vt-progress" class="progress-box hidden"></div>
+    </div>
+
+    <div class="card" id="split-bundle-card" hidden>
+      <div class="card-title">Multiple plain APKs selected</div>
+      <div class="card-desc">
+        If these are base + split APKs of <strong>one</strong> app (e.g. <code>base.apk</code> +
+        <code>split_config.arm64_v8a.apk</code>), install them together as a single package.
+        Otherwise, leave this off to install each one as its own separate app.
+      </div>
+      <label class="check-inline"><input type="checkbox" id="split-bundle-check"> These are split APKs of one app — install as a single bundle</label>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Install options</div>
+      <label class="check-inline" style="margin-bottom:7px;"><input type="checkbox" id="opt-replace" checked> Replace existing app if already installed (-r)</label>
+      <label class="check-inline" style="margin-bottom:7px;"><input type="checkbox" id="opt-grant"> Auto-grant all runtime permissions (-g)</label>
+      <label class="check-inline"><input type="checkbox" id="opt-delete-after"> Delete file after successful install</label>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-primary" id="install-btn" disabled>Install selected (0)</button>
+      </div>
+      <div id="install-progress" class="progress-box hidden"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="tab-history" class="panel-view">
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">Install history</div>
+        <button class="btn btn-ghost" id="history-clear-btn">Clear</button>
+      </div>
+      <div id="history-list" class="item-list">
+        <div class="empty-state">Nothing installed through PULSE//INSTALL yet.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXTRACT -->
+  <section id="tab-extract" class="panel-view">
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">Extract an installed app</div>
+        <button class="btn btn-secondary" id="scan-extract-apps-btn">Scan installed apps</button>
+      </div>
+      <div class="card-desc">
+        Pulls an installed app's APK (and splits, if any) back out to a file — either as
+        loose <code>.apk</code> files, or bundled into a <code>.xapk</code> you can hand to
+        this same installer (or any XAPK-compatible one) later. This produces a functionally
+        valid XAPK — see the README for how it compares to APKPure's own.
+      </div>
+      <div class="row-between" style="margin-bottom:9px;">
+        <input type="text" id="extract-app-search" placeholder="Filter by package name…">
+        <label class="check-inline"><input type="checkbox" id="extract-scope-user" checked> User apps only</label>
+      </div>
+      <div id="extract-app-list" class="item-list">
+        <div class="empty-state">Run a scan to list installed apps.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Output</div>
+      <label class="field">
+        Format
+        <select id="extract-format">
+          <option value="loose">Loose APK files (base + splits)</option>
+          <option value="xapk">.xapk bundle</option>
+        </select>
+      </label>
+      <p class="muted" style="font-size:11px;">Saved to <code>/sdcard/Download/pulse-extracted/</code></p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="extract-btn" disabled>Extract selected (0)</button>
+      </div>
+      <div id="extract-progress" class="progress-box hidden"></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="console-drawer" id="console-drawer">
+  <div class="console-header" id="console-toggle">
+    <span>Console</span>
+    <span class="console-count" id="console-count">0</span>
+  </div>
+  <div class="console-body" id="console-body"></div>
+</div>
+
+<div class="modal-backdrop hidden" id="confirm-backdrop">
+  <div class="modal">
+    <div class="modal-title" id="confirm-title">Confirm action</div>
+    <div class="modal-body" id="confirm-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

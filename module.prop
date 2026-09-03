@@ -1,0 +1,7 @@
+id=pulse-install
+name=PULSE // INSTALL
+version=v1.0.0
+versionCode=1
+author=kreza6173-pixel
+description=Universal installer for APK, APKS, XAPK, and APKM files — single or batch, with a built-in device file browser and install history.
+usesShellBridge=true
